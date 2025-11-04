@@ -54,7 +54,6 @@ export function useTodos() {
       setTodos((prev) =>
         prev.map((todo) => (todo.id === id ? updatedTodo : todo))
       );
-      toast.success(`Todo marked as ${!completed ? 'complete' : 'incomplete'}!`);
     } catch (error) {
       console.error("Failed to toggle todo:", error);      
       setTodos((prev) =>
@@ -113,7 +112,6 @@ export function useTodos() {
       setTodos((prev) =>
         prev.map((todo) => (todo.id === id ? updatedTodo : todo))
       );
-      toast.success("Todo updated successfully!");
     } catch (error) {
       console.error("Failed to update todo:", error);      
       setTodos((prev) =>
