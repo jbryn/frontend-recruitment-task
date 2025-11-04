@@ -1,52 +1,22 @@
 import { clsx } from "clsx";
-import { useState, useEffect } from "react";
-import { Todo } from "./types";
-import { TodoService } from "./services/todoService";
+import { useTodos } from "./hooks/useTodos";
 
 export function App() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [inputValue, setInputValue] = useState("");
-
-  const fetchTodos = async () => {
-    try {
-      const data = await TodoService.getAll();
-      setTodos(data);
-    } catch (error) {
-      console.error("Failed to fetch todos:", error);
-    }
-  };
-
-  const addTodo = async (title: string) => {
-    if (title.trim() === "") return;
-
-    try {
-      const newTodo = await TodoService.create({ title: title.trim() });
-      setTodos((prev) => [...prev, newTodo]);
-      setInputValue("");
-    } catch (error) {
-      console.error("Failed to add todo:", error);
-    }
-  };
-
-  const toggleTodo = async (id: string, completed: boolean) => {
-    try {
-      const updatedTodo = await TodoService.toggleComplete(id, !completed);
-      setTodos((prev) =>
-        prev.map((todo) => (todo.id === id ? updatedTodo : todo)),
-      );
-    } catch (error) {
-      console.error("Failed to toggle todo:", error);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    addTodo(inputValue);
-  };
-
-  useEffect(() => {
-    fetchTodos();
-  }, []);
+  const {
+    todos,
+    inputValue,
+    setInputValue,
+    editingId,
+    editingValue,
+    setEditingValue,
+    toggleTodo,
+    clearCompleted,
+    handleSubmit,
+    startEditing,
+    handleEditKeyDown,
+    remainingCount,
+    hasCompletedTodos,
+  } = useTodos();
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4 p-4">
@@ -75,12 +45,30 @@ export function App() {
               )}
             >
               <div className="min-w-0 flex-1 text-sm leading-6">
-                <label
-                  className="select-none font-medium text-gray-900"
-                  data-testid="todo-title"
-                >
-                  {todo.title}
-                </label>
+                {editingId === todo.id ? (
+                  <input
+                    type="text"
+                    value={editingValue}
+                    onChange={(e) => setEditingValue(e.target.value)}
+                    onKeyDown={(e) => handleEditKeyDown(e, todo.id)}
+                    onBlur={() =>
+                      handleEditKeyDown(
+                        { key: "Enter" } as React.KeyboardEvent,
+                        todo.id,
+                      )
+                    }
+                    autoFocus
+                    className="w-full rounded-md border-0 py-1 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  />
+                ) : (
+                  <label
+                    className="select-none font-medium text-gray-900 cursor-pointer"
+                    data-testid="todo-title"
+                    onDoubleClick={() => startEditing(todo.id, todo.title)}
+                  >
+                    {todo.title}
+                  </label>
+                )}
               </div>
               <div className="ml-3 flex h-6 items-center">
                 <input
@@ -100,11 +88,16 @@ export function App() {
           data-testid="todo-count"
           className="text-sm font-medium leading-6 text-gray-900"
         >
-          {todos.filter((todo) => !todo.completed).length} items left
+          {remainingCount} items left
         </span>
-        <button className="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-          Clear completed
-        </button>
+        {hasCompletedTodos && (
+          <button
+            onClick={clearCompleted}
+            className="rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+          >
+            Clear completed
+          </button>
+        )}
       </div>
     </div>
   );
