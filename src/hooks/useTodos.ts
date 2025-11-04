@@ -18,7 +18,9 @@ export function useTodos() {
       setTodos(data);
     } catch (error) {
       console.error("Failed to fetch todos:", error);
-      toast.error("Failed to load todos. Please try again.");
+      toast.error("Failed to load todos. Please try again.", {
+        id: 'fetch-todos-error',
+      });
     } finally {
       setIsLoading(false);
     }
